@@ -1,0 +1,11 @@
+{
+	"id": "font-gallery",
+	"name": "Font Gallery",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "A plugin for Obsidian that displays a gallery of installed fonts.",
+	"author": "Obsidian",
+	"authorUrl": "https://obsidian.md",
+	"fundingUrl": "https://obsidian.md/pricing",
+	"isDesktopOnly": true
+}
