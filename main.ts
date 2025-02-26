@@ -15,6 +15,13 @@ import {
 	CLASSIC_TEMPLATE,
 	MODERN_TEMPLATE,
 } from "./DEFAULT_SETTINGS";
+import {
+	MODAL_STRINGS,
+	MODAL_STYLES,
+	TEMPLATE_EDITOR_STYLES,
+	TOC_TEMPLATE,
+	formatString,
+} from "./strings";
 
 /*=======================================================
  *                    TYPE DEFINITIONS
@@ -90,6 +97,8 @@ class FontGalleryModal extends Modal {
 	outputFolder: string = "";
 	plugin: FontGallery;
 	templateSelection: "classic" | "modern" | "custom" = "modern";
+	// Track if settings have been modified
+	settingsModified: boolean = false;
 
 	constructor(app: App) {
 		super(app);
@@ -97,10 +106,10 @@ class FontGalleryModal extends Modal {
 		const plugin = (app as any).plugins.plugins["font-gallery"];
 		this.plugin = plugin;
 
-		console.log("FontGalleryModal - Constructor called");
+		console.log(MODAL_STRINGS.DEBUG_CONSTRUCTOR_CALLED);
 
 		if (plugin && plugin.settings) {
-			console.log("FontGalleryModal - Plugin settings found");
+			console.log(MODAL_STRINGS.DEBUG_SETTINGS_FOUND);
 			this.createToc = plugin.settings.createTableOfContents;
 			this.metadataLocation = plugin.settings.metadataLocation;
 			this.tocFontSize = plugin.settings.tocFontSize;
@@ -110,36 +119,34 @@ class FontGalleryModal extends Modal {
 
 			// Set the template based on the template selection
 			if (this.templateSelection === "classic") {
-				console.log("FontGalleryModal - Using classic template");
+				console.log(MODAL_STRINGS.DEBUG_USING_CLASSIC);
 				this.fontTemplate = CLASSIC_TEMPLATE;
 			} else if (this.templateSelection === "modern") {
-				console.log("FontGalleryModal - Using modern template");
+				console.log(MODAL_STRINGS.DEBUG_USING_MODERN);
 				this.fontTemplate = MODERN_TEMPLATE;
 			} else if (this.templateSelection === "custom") {
-				console.log(
-					"FontGalleryModal - Using custom template from settings"
-				);
+				console.log(MODAL_STRINGS.DEBUG_USING_CUSTOM);
 				this.fontTemplate = plugin.settings.fontTemplate;
 			} else {
 				// Fallback to default
-				console.log(
-					"FontGalleryModal - Using default template (fallback)"
-				);
+				console.log(MODAL_STRINGS.DEBUG_USING_DEFAULT);
 				this.fontTemplate = DEFAULT_SETTINGS.fontTemplate;
 			}
 
 			console.log(
-				"FontGalleryModal - Template selection:",
-				this.templateSelection
+				formatString(
+					MODAL_STRINGS.DEBUG_TEMPLATE_SELECTION,
+					this.templateSelection
+				)
 			);
 			console.log(
-				"FontGalleryModal - Template content:",
-				this.fontTemplate.substring(0, 50) + "..."
+				formatString(
+					MODAL_STRINGS.DEBUG_TEMPLATE_CONTENT,
+					this.fontTemplate.substring(0, 50) + "..."
+				)
 			);
 		} else {
-			console.log(
-				"FontGalleryModal - No plugin settings found, using defaults"
-			);
+			console.log(MODAL_STRINGS.DEBUG_NO_SETTINGS);
 			// Use default template if no settings are available
 			this.fontTemplate = DEFAULT_SETTINGS.fontTemplate;
 		}
@@ -151,92 +158,7 @@ class FontGalleryModal extends Modal {
 
 		// Add a style element to the modal
 		const styleEl = contentEl.createEl("style");
-		styleEl.textContent = `
-			.font-gallery-modal {
-				padding: 20px;
-			}
-			
-			.modal-header {
-				margin-bottom: 24px;
-				text-align: center;
-			}
-			
-			.modal-title {
-				margin-bottom: 8px;
-				font-size: 24px;
-			}
-			
-			.font-gallery-description {
-				opacity: 0.8;
-				margin-bottom: 16px;
-			}
-			
-			.font-gallery-options-container {
-				margin-bottom: 24px;
-				display: flex;
-				flex-direction: column;
-				gap: 16px;
-			}
-			
-			.font-gallery-option {
-				display: flex;
-				align-items: center;
-				padding: 10px;
-				background-color: var(--background-secondary);
-				border-radius: 8px;
-			}
-			
-			.option-label {
-				flex: 1;
-				margin-right: 10px;
-				font-weight: 500;
-			}
-			
-			.font-gallery-button-container {
-				display: flex;
-				justify-content: center;
-				margin-top: 20px;
-			}
-			
-			.font-gallery-create-button {
-				padding: 8px 16px;
-				font-size: 16px;
-				font-weight: 500;
-			}
-			
-			.font-gallery-edit-template-button {
-				padding: 6px 12px;
-				background-color: var(--interactive-accent);
-				color: var(--text-on-accent);
-				border-radius: 4px;
-				border: none;
-				cursor: pointer;
-			}
-			
-			.font-gallery-edit-template-button:hover {
-				background-color: var(--interactive-accent-hover);
-			}
-			
-			.folder-input-container {
-				display: flex;
-				flex: 1;
-				gap: 8px;
-			}
-			
-			.font-gallery-folder-input {
-				flex: 1;
-				padding: 4px 8px;
-			}
-			
-			.font-gallery-folder-browse {
-				padding: 4px 8px;
-				background-color: var(--interactive-accent);
-				color: var(--text-on-accent);
-				border-radius: 4px;
-				border: none;
-				cursor: pointer;
-			}
-		`;
+		styleEl.textContent = MODAL_STYLES;
 	}
 
 	// Helper method to create option containers with consistent styling
@@ -301,11 +223,11 @@ class FontGalleryModal extends Modal {
 			cls: "modal-header",
 		});
 		headerSection.createEl("h1", {
-			text: "Font Gallery",
+			text: MODAL_STRINGS.MODAL_TITLE,
 			cls: "modal-title",
 		});
 		headerSection.createEl("p", {
-			text: "This will create preview notes for system fonts using the Local Font Access API. This feature requires a compatible browser.",
+			text: MODAL_STRINGS.MODAL_DESCRIPTION,
 			cls: "font-gallery-description",
 		});
 
@@ -321,7 +243,7 @@ class FontGalleryModal extends Modal {
 		);
 
 		templateContainer.createEl("label", {
-			text: "Template Style:",
+			text: MODAL_STRINGS.TEMPLATE_STYLE_LABEL,
 			attr: { for: "font-gallery-template-selection" },
 			cls: "option-label",
 		});
@@ -332,9 +254,9 @@ class FontGalleryModal extends Modal {
 		});
 
 		const templateOptions = [
-			{ value: "classic", text: "Classic Layout" },
-			{ value: "modern", text: "Modern Layout" },
-			{ value: "custom", text: "Custom Template" },
+			{ value: "classic", text: MODAL_STRINGS.CLASSIC_LAYOUT },
+			{ value: "modern", text: MODAL_STRINGS.MODERN_LAYOUT },
+			{ value: "custom", text: MODAL_STRINGS.CUSTOM_TEMPLATE },
 		];
 
 		templateOptions.forEach((option) => {
@@ -374,6 +296,9 @@ class FontGalleryModal extends Modal {
 				}
 			}
 
+			// Mark settings as modified
+			this.settingsModified = true;
+
 			// Update edit template button visibility
 			if (editTemplateButton) {
 				editTemplateButton.style.display =
@@ -388,7 +313,7 @@ class FontGalleryModal extends Modal {
 		);
 
 		const tocLabel = tocContainer.createEl("label", {
-			text: "Create Table of Contents (Fonts MOC)",
+			text: MODAL_STRINGS.TOC_LABEL,
 			attr: { for: "font-gallery-toc" },
 			cls: "option-label",
 		});
@@ -408,6 +333,7 @@ class FontGalleryModal extends Modal {
 			tocFontSizeContainer.style.display = this.createToc
 				? "flex"
 				: "none";
+			this.settingsModified = true;
 		});
 
 		// TOC Font Size option (only visible when TOC is enabled)
@@ -418,7 +344,7 @@ class FontGalleryModal extends Modal {
 		tocFontSizeContainer.style.display = this.createToc ? "flex" : "none";
 
 		tocFontSizeContainer.createEl("label", {
-			text: "TOC Font Size (em):",
+			text: MODAL_STRINGS.TOC_FONT_SIZE_LABEL,
 			attr: { for: "font-gallery-toc-font-size" },
 			cls: "option-label",
 		});
@@ -444,6 +370,7 @@ class FontGalleryModal extends Modal {
 			const target = e.target as HTMLInputElement;
 			this.tocFontSize = parseFloat(target.value);
 			fontSizeValueDisplay.setText(` ${this.tocFontSize}`);
+			this.settingsModified = true;
 		});
 
 		// Include metadata toggle
@@ -453,7 +380,7 @@ class FontGalleryModal extends Modal {
 		);
 
 		includeMetadataContainer.createEl("label", {
-			text: "Include Metadata in Notes:",
+			text: MODAL_STRINGS.INCLUDE_METADATA_LABEL,
 			attr: { for: "font-gallery-include-metadata" },
 			cls: "option-label",
 		});
@@ -486,10 +413,11 @@ class FontGalleryModal extends Modal {
 			metadataContainer.style.display = this.includeMetadata
 				? "flex"
 				: "none";
+			this.settingsModified = true;
 		});
 
 		metadataContainer.createEl("label", {
-			text: "Store Font Metadata as:",
+			text: MODAL_STRINGS.METADATA_LOCATION_LABEL,
 			attr: { for: "font-gallery-metadata" },
 			cls: "option-label",
 		});
@@ -500,9 +428,9 @@ class FontGalleryModal extends Modal {
 		});
 
 		const options = [
-			{ value: "tags", text: "Tags" },
-			{ value: "links", text: "Links" },
-			{ value: "properties", text: "Note Properties (YAML)" },
+			{ value: "tags", text: MODAL_STRINGS.METADATA_TAGS },
+			{ value: "links", text: MODAL_STRINGS.METADATA_LINKS },
+			{ value: "properties", text: MODAL_STRINGS.METADATA_PROPERTIES },
 		];
 
 		options.forEach((option) => {
@@ -521,6 +449,7 @@ class FontGalleryModal extends Modal {
 				| "tags"
 				| "links"
 				| "properties";
+			this.settingsModified = true;
 		});
 
 		// Output folder selection
@@ -530,7 +459,7 @@ class FontGalleryModal extends Modal {
 		);
 
 		folderContainer.createEl("label", {
-			text: "Output Folder:",
+			text: MODAL_STRINGS.OUTPUT_FOLDER_LABEL,
 			cls: "option-label",
 		});
 
@@ -548,13 +477,14 @@ class FontGalleryModal extends Modal {
 		});
 
 		const folderBrowseButton = folderInputContainer.createEl("button", {
-			text: "Browse",
+			text: MODAL_STRINGS.BROWSE_BUTTON,
 			cls: "font-gallery-folder-browse",
 		});
 
 		folderInput.addEventListener("change", (e) => {
 			const target = e.target as HTMLInputElement;
 			this.outputFolder = target.value;
+			this.settingsModified = true;
 		});
 
 		folderBrowseButton.addEventListener("click", async () => {
@@ -563,6 +493,7 @@ class FontGalleryModal extends Modal {
 			if (folderPath) {
 				folderInput.value = folderPath;
 				this.outputFolder = folderPath;
+				this.settingsModified = true;
 			}
 		});
 
@@ -573,12 +504,12 @@ class FontGalleryModal extends Modal {
 		);
 
 		templateEditorContainer.createEl("label", {
-			text: "Custom Template:",
+			text: MODAL_STRINGS.CUSTOM_TEMPLATE_LABEL,
 			cls: "option-label",
 		});
 
 		const editTemplateButton = templateEditorContainer.createEl("button", {
-			text: "Edit Template",
+			text: MODAL_STRINGS.EDIT_TEMPLATE_BUTTON,
 			cls: "font-gallery-edit-template-button",
 		});
 
@@ -596,32 +527,23 @@ class FontGalleryModal extends Modal {
 		});
 
 		const createButton = buttonContainer.createEl("button", {
-			text: "Create Font Preview Notes",
+			text: MODAL_STRINGS.CREATE_BUTTON,
 			cls: "font-gallery-create-button",
 		});
 
 		createButton.addEventListener("click", async () => {
 			// Save settings before proceeding
 			if (this.plugin) {
-				this.plugin.settings.createTableOfContents = this.createToc;
-				this.plugin.settings.metadataLocation = this.metadataLocation;
-				this.plugin.settings.tocFontSize = this.tocFontSize;
-				this.plugin.settings.fontTemplate = this.fontTemplate;
-				this.plugin.settings.includeMetadata = this.includeMetadata;
-				this.plugin.settings.outputFolder = this.outputFolder;
-				this.plugin.settings.templateSelection = this.templateSelection;
-				await this.plugin.saveSettings();
+				await this.saveModalSettings();
 			}
 
-			const progressNotice = new Notice("Getting system fonts...", 0);
+			const progressNotice = new Notice(MODAL_STRINGS.GETTING_FONTS, 0);
 
 			try {
 				let fonts = await this.getSystemFonts();
 
 				if (fonts.length === 0) {
-					progressNotice.setMessage(
-						"No system fonts found. The Local Font Access API may not be available in your browser."
-					);
+					progressNotice.setMessage(MODAL_STRINGS.NO_FONTS_FOUND);
 					setTimeout(() => progressNotice.hide(), 5000);
 					return;
 				}
@@ -632,11 +554,18 @@ class FontGalleryModal extends Modal {
 
 				if (originalCount !== fonts.length) {
 					progressNotice.setMessage(
-						`Found ${originalCount} fonts, processing ${fonts.length} unique font families...`
+						formatString(
+							MODAL_STRINGS.FOUND_FONTS,
+							originalCount,
+							fonts.length
+						)
 					);
 				} else {
 					progressNotice.setMessage(
-						`Processing ${fonts.length} fonts...`
+						formatString(
+							MODAL_STRINGS.PROCESSING_FONTS,
+							fonts.length
+						)
 					);
 				}
 
@@ -837,7 +766,7 @@ type: FontPreview
 							: "Fonts MOC.md";
 
 						// Generate TOC content with the new format
-						let tocContent = `<h1 style="font-size: 4em;">Font Gallery</h1>\n<h4 style="text-align: left; font-weight: normal; font-size: 1.5rem; font-style:italic; margin-top: -20px">A collection of fonts installed on your system.</h4>\n<p style="margin-top: 1em; margin-bottom: 2em;">This gallery showcases all the fonts available through the Local Font Access API on your system. Each font has its own dedicated page with typography samples and visual characteristics.</p>\n<hr>\n\n`;
+						let tocContent = TOC_TEMPLATE;
 
 						// Sort links alphabetically
 						tocLinks.sort((a, b) =>
@@ -869,7 +798,11 @@ type: FontPreview
 
 						// Set final message but make it disappear after 5 seconds
 						progressNotice.setMessage(
-							`Finished processing ${successCount} fonts, ${failCount} failed. Table of Contents created.`
+							formatString(
+								MODAL_STRINGS.FINISHED_WITH_TOC,
+								successCount,
+								failCount
+							)
 						);
 						setTimeout(() => progressNotice.hide(), 5000);
 					} catch (error) {
@@ -879,23 +812,29 @@ type: FontPreview
 						);
 						// Set error message but make it disappear after 5 seconds
 						progressNotice.setMessage(
-							`Finished processing ${successCount} fonts, ${failCount} failed. Failed to create Table of Contents.`
+							formatString(
+								MODAL_STRINGS.FINISHED_WITHOUT_TOC,
+								successCount,
+								failCount
+							)
 						);
 						setTimeout(() => progressNotice.hide(), 5000);
 					}
 				} else {
 					// Set final message but make it disappear after 5 seconds
 					progressNotice.setMessage(
-						`Finished processing ${successCount} fonts, ${failCount} failed.`
+						formatString(
+							MODAL_STRINGS.FINISHED_PROCESSING,
+							successCount,
+							failCount
+						)
 					);
 					setTimeout(() => progressNotice.hide(), 5000);
 				}
 			} catch (error) {
 				console.error("Error processing fonts:", error);
 				// Set error message but make it disappear after 5 seconds
-				progressNotice.setMessage(
-					"An error occurred while processing fonts."
-				);
+				progressNotice.setMessage(MODAL_STRINGS.PROCESSING_ERROR);
 				setTimeout(() => progressNotice.hide(), 5000);
 			}
 		});
@@ -910,6 +849,40 @@ type: FontPreview
 			});
 			folderModal.open();
 		});
+	}
+
+	// Override the onClose method to save settings when the modal is closed
+	onClose() {
+		// Save settings if they were modified
+		if (this.settingsModified && this.plugin) {
+			this.saveModalSettings();
+		}
+		super.onClose();
+	}
+
+	// Helper method to save modal settings to plugin settings
+	async saveModalSettings() {
+		if (this.plugin) {
+			this.plugin.settings.createTableOfContents = this.createToc;
+			this.plugin.settings.metadataLocation = this.metadataLocation;
+			this.plugin.settings.tocFontSize = this.tocFontSize;
+			this.plugin.settings.fontTemplate = this.fontTemplate;
+			this.plugin.settings.includeMetadata = this.includeMetadata;
+			this.plugin.settings.outputFolder = this.outputFolder;
+			this.plugin.settings.templateSelection = this.templateSelection;
+			await this.plugin.saveSettings();
+			this.settingsModified = false;
+		}
+	}
+
+	// Method to update the template selection dropdown
+	updateTemplateSelectionDropdown() {
+		const templateSelect = document.getElementById(
+			"font-gallery-template-selection"
+		) as HTMLSelectElement;
+		if (templateSelect) {
+			templateSelect.value = this.templateSelection;
+		}
 	}
 }
 
@@ -927,12 +900,16 @@ class TemplateEditorModal extends Modal {
 		this.modal = modal;
 
 		console.log(
-			"TemplateEditorModal - Current template selection:",
-			modal.templateSelection
+			formatString(
+				MODAL_STRINGS.DEBUG_TEMPLATE_EDITOR_SELECTION,
+				modal.templateSelection
+			)
 		);
 		console.log(
-			"TemplateEditorModal - Current template content:",
-			modal.fontTemplate
+			formatString(
+				MODAL_STRINGS.DEBUG_TEMPLATE_EDITOR_CONTENT,
+				modal.fontTemplate.substring(0, 50) + "..."
+			)
 		);
 
 		// Always use the current template from the modal
@@ -952,8 +929,10 @@ class TemplateEditorModal extends Modal {
 		}
 
 		console.log(
-			"TemplateEditorModal - Original template set to:",
-			this.originalTemplate.substring(0, 50) + "..."
+			formatString(
+				MODAL_STRINGS.DEBUG_ORIGINAL_TEMPLATE,
+				this.originalTemplate.substring(0, 50) + "..."
+			)
 		);
 	}
 
@@ -970,11 +949,11 @@ class TemplateEditorModal extends Modal {
 			cls: "modal-header",
 		});
 		headerSection.createEl("h1", {
-			text: "Font Preview Template",
+			text: MODAL_STRINGS.TEMPLATE_EDITOR_TITLE,
 			cls: "modal-title",
 		});
 		headerSection.createEl("p", {
-			text: "This template will be used to generate font preview notes.",
+			text: MODAL_STRINGS.TEMPLATE_EDITOR_DESCRIPTION,
 			cls: "font-gallery-description",
 		});
 
@@ -995,8 +974,10 @@ class TemplateEditorModal extends Modal {
 		});
 
 		console.log(
-			"TemplateEditorModal - Setting editor value to:",
-			this.template.substring(0, 50) + "..."
+			formatString(
+				MODAL_STRINGS.DEBUG_TEMPLATE_EDITOR_CONTENT,
+				this.template.substring(0, 50) + "..."
+			)
 		);
 
 		// Set the value after creating the element to ensure it's properly loaded
@@ -1018,17 +999,11 @@ class TemplateEditorModal extends Modal {
 		});
 
 		variablesInfo.createEl("h3", {
-			text: "Available Template Variables:",
+			text: MODAL_STRINGS.VARIABLES_TITLE,
 		});
 
 		const variablesList = variablesInfo.createEl("ul");
-		[
-			"{fontFamily} - The font's family name",
-			"{fontName} - Sanitized version of the font name (used for filenames)",
-			"{fullName} - The font's full name (falls back to family name if not available)",
-			"{style} - The font's style (falls back to 'Regular' if not available)",
-			"{postscriptName} - The font's PostScript name (if available)",
-		].forEach((text) => {
+		MODAL_STRINGS.VARIABLES.forEach((text) => {
 			variablesList.createEl("li", { text });
 		});
 
@@ -1041,7 +1016,7 @@ class TemplateEditorModal extends Modal {
 
 		// Add reset button
 		const resetButton = buttonContainer.createEl("button", {
-			text: "Reset to Default",
+			text: MODAL_STRINGS.RESET_BUTTON,
 			cls: "font-gallery-reset-button",
 		});
 
@@ -1051,26 +1026,24 @@ class TemplateEditorModal extends Modal {
 
 		resetButton.addEventListener("click", () => {
 			// Confirm before resetting
-			if (
-				confirm(
-					"Are you sure you want to reset to the default template?"
-				)
-			) {
+			if (confirm(MODAL_STRINGS.RESET_CONFIRM)) {
 				templateEditor.value = this.originalTemplate;
 				this.template = this.originalTemplate;
 			}
 		});
 
 		const saveButton = buttonContainer.createEl("button", {
-			text: "Save Template",
+			text: MODAL_STRINGS.SAVE_TEMPLATE_BUTTON,
 			cls: "font-gallery-create-button",
 		});
 
 		saveButton.addEventListener("click", () => {
-			console.log("TemplateEditorModal - Save button clicked");
+			console.log(MODAL_STRINGS.DEBUG_SAVE_BUTTON_CLICKED);
 			console.log(
-				"TemplateEditorModal - New template value:",
-				templateEditor.value.substring(0, 50) + "..."
+				formatString(
+					MODAL_STRINGS.DEBUG_NEW_TEMPLATE_VALUE,
+					templateEditor.value.substring(0, 50) + "..."
+				)
 			);
 
 			this.template = templateEditor.value;
@@ -1078,33 +1051,38 @@ class TemplateEditorModal extends Modal {
 
 			// When saving, make sure we're in custom template mode
 			this.modal.templateSelection = "custom";
+			// Mark settings as modified to ensure they get saved
+			this.modal.settingsModified = true;
+
+			// Update the template selection dropdown in the main modal
+			this.modal.updateTemplateSelectionDropdown();
 
 			// Also save to plugin settings if available
 			if (this.modal.plugin && this.modal.plugin.settings) {
-				console.log("TemplateEditorModal - Saving to plugin settings");
+				console.log(MODAL_STRINGS.DEBUG_SAVING_SETTINGS);
 				this.modal.plugin.settings.fontTemplate = this.template;
 				this.modal.plugin.settings.templateSelection = "custom";
 				this.modal.plugin
 					.saveSettings()
 					.then(() => {
-						console.log(
-							"TemplateEditorModal - Settings saved successfully"
-						);
-						new Notice("Template saved successfully");
+						console.log(MODAL_STRINGS.DEBUG_SETTINGS_SAVED);
+						new Notice(MODAL_STRINGS.TEMPLATE_SAVED);
 						this.close();
 					})
 					.catch((error) => {
 						console.error(
-							"TemplateEditorModal - Error saving settings:",
-							error
+							formatString(
+								MODAL_STRINGS.DEBUG_SETTINGS_SAVE_ERROR,
+								error
+							)
 						);
-						new Notice("Error saving template: " + error.message);
+						new Notice(
+							MODAL_STRINGS.TEMPLATE_SAVE_ERROR + error.message
+						);
 					});
 			} else {
-				console.log(
-					"TemplateEditorModal - No plugin settings available, closing without saving"
-				);
-				new Notice("Template saved successfully");
+				console.log(MODAL_STRINGS.DEBUG_NO_PLUGIN_SETTINGS);
+				new Notice(MODAL_STRINGS.TEMPLATE_SAVED);
 				this.close();
 			}
 		});
@@ -1114,61 +1092,20 @@ class TemplateEditorModal extends Modal {
 	getTemplateStyleName(templateSelection: string): string {
 		switch (templateSelection) {
 			case "classic":
-				return "Classic Layout";
+				return MODAL_STRINGS.CLASSIC_LAYOUT;
 			case "modern":
-				return "Modern Layout";
+				return MODAL_STRINGS.MODERN_LAYOUT;
 			case "custom":
-				return "Custom Template";
+				return MODAL_STRINGS.CUSTOM_TEMPLATE;
 			default:
-				return "Custom Template";
+				return MODAL_STRINGS.CUSTOM_TEMPLATE;
 		}
 	}
 
 	addModalStyles() {
 		const { contentEl } = this;
 		const styleEl = contentEl.createEl("style");
-		styleEl.textContent = `
-			.font-gallery-modal {
-				padding: 20px;
-			}
-			
-			.modal-header {
-				margin-bottom: 24px;
-				text-align: center;
-			}
-			
-			.modal-title {
-				margin-bottom: 8px;
-				font-size: 24px;
-			}
-			
-			.font-gallery-description {
-				opacity: 0.8;
-				margin-bottom: 16px;
-			}
-			
-			.font-gallery-button-container {
-				display: flex;
-				justify-content: center;
-				margin-top: 20px;
-			}
-			
-			.font-gallery-create-button {
-				padding: 8px 16px;
-				font-size: 16px;
-				font-weight: 500;
-			}
-			
-			.font-gallery-template-editor {
-				width: 100%;
-				min-height: 300px;
-				font-family: monospace;
-				padding: 10px;
-				border-radius: 4px;
-				background-color: var(--background-primary);
-				border: 1px solid var(--background-modifier-border);
-			}
-		`;
+		styleEl.textContent = TEMPLATE_EDITOR_STYLES;
 	}
 }
 
@@ -1190,27 +1127,27 @@ class FontGallerySettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName("Include Metadata")
-			.setDesc("Include font metadata in notes")
+			.setName(MODAL_STRINGS.SETTINGS_INCLUDE_METADATA)
+			.setDesc(MODAL_STRINGS.SETTINGS_INCLUDE_METADATA_DESC)
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.includeMetadata)
 					.onChange((value) => {
 						this.plugin.settings.includeMetadata = value;
 						this.plugin.saveSettings();
-						new Notice("Include metadata setting updated");
+						new Notice(MODAL_STRINGS.INCLUDE_METADATA_UPDATED);
 					})
 			);
 
 		new Setting(containerEl)
-			.setName("Metadata Location")
-			.setDesc("Where to store font metadata")
+			.setName(MODAL_STRINGS.SETTINGS_METADATA_LOCATION)
+			.setDesc(MODAL_STRINGS.SETTINGS_METADATA_LOCATION_DESC)
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOptions({
-						tags: "Tags",
-						links: "Links",
-						properties: "Note Properties (YAML)",
+						tags: MODAL_STRINGS.METADATA_TAGS,
+						links: MODAL_STRINGS.METADATA_LINKS,
+						properties: MODAL_STRINGS.METADATA_PROPERTIES,
 					})
 					.setValue(this.plugin.settings.metadataLocation)
 					.onChange((value) => {
@@ -1219,15 +1156,13 @@ class FontGallerySettingTab extends PluginSettingTab {
 							| "links"
 							| "properties";
 						this.plugin.saveSettings();
-						new Notice("Metadata location updated");
+						new Notice(MODAL_STRINGS.METADATA_LOCATION_UPDATED);
 					})
 			);
 
 		new Setting(containerEl)
-			.setName("Output Folder")
-			.setDesc(
-				"Folder where font notes will be created (leave empty for vault root)"
-			)
+			.setName(MODAL_STRINGS.SETTINGS_OUTPUT_FOLDER)
+			.setDesc(MODAL_STRINGS.SETTINGS_OUTPUT_FOLDER_DESC)
 			.addText((text) => {
 				text.setPlaceholder("Enter folder path")
 					.setValue(this.plugin.settings.outputFolder)
@@ -1238,7 +1173,7 @@ class FontGallerySettingTab extends PluginSettingTab {
 			})
 			.addButton((button) => {
 				button
-					.setButtonText("Browse")
+					.setButtonText(MODAL_STRINGS.BROWSE_BUTTON)
 					.setCta()
 					.onClick(async () => {
 						const folderModal = new FolderSuggestModal(this.app);
@@ -1254,21 +1189,21 @@ class FontGallerySettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("Create Table of Contents")
-			.setDesc("Create a table of contents for font notes")
+			.setName(MODAL_STRINGS.SETTINGS_CREATE_TOC)
+			.setDesc(MODAL_STRINGS.SETTINGS_CREATE_TOC_DESC)
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.createTableOfContents)
 					.onChange((value) => {
 						this.plugin.settings.createTableOfContents = value;
 						this.plugin.saveSettings();
-						new Notice("Table of contents setting updated");
+						new Notice(MODAL_STRINGS.TOC_SETTING_UPDATED);
 					})
 			);
 
 		new Setting(containerEl)
-			.setName("TOC Font Size")
-			.setDesc("Font size for table of contents")
+			.setName(MODAL_STRINGS.SETTINGS_TOC_FONT_SIZE)
+			.setDesc(MODAL_STRINGS.SETTINGS_TOC_FONT_SIZE_DESC)
 			.addSlider((slider) =>
 				slider
 					.setValue(this.plugin.settings.tocFontSize)
@@ -1276,18 +1211,18 @@ class FontGallerySettingTab extends PluginSettingTab {
 					.onChange((value) => {
 						this.plugin.settings.tocFontSize = value;
 						this.plugin.saveSettings();
-						new Notice("TOC font size updated");
+						new Notice(MODAL_STRINGS.TOC_FONT_SIZE_UPDATED);
 					})
 			);
 
 		new Setting(containerEl)
-			.setName("Template Style")
-			.setDesc("Choose the template style for font preview notes")
+			.setName(MODAL_STRINGS.SETTINGS_TEMPLATE_STYLE)
+			.setDesc(MODAL_STRINGS.SETTINGS_TEMPLATE_STYLE_DESC)
 			.addDropdown((dropdown) => {
 				dropdown
-					.addOption("classic", "Classic Layout")
-					.addOption("modern", "Modern Layout")
-					.addOption("custom", "Custom Template")
+					.addOption("classic", MODAL_STRINGS.CLASSIC_LAYOUT)
+					.addOption("modern", MODAL_STRINGS.MODERN_LAYOUT)
+					.addOption("custom", MODAL_STRINGS.CUSTOM_TEMPLATE)
 					.setValue(this.plugin.settings.templateSelection)
 					.onChange(async (value) => {
 						const newSelection = value as
@@ -1322,7 +1257,9 @@ class FontGallerySettingTab extends PluginSettingTab {
 						}
 
 						await this.plugin.saveSettings();
-						new Notice(`Template style updated to ${value}`);
+						new Notice(
+							MODAL_STRINGS.TEMPLATE_STYLE_UPDATED + value
+						);
 
 						// Refresh settings to show/hide template editor button
 						this.display();
@@ -1331,19 +1268,22 @@ class FontGallerySettingTab extends PluginSettingTab {
 
 		// Always show the template editor button, but only enable it for custom template
 		const templateEditorSetting = new Setting(containerEl)
-			.setName("Font Preview Template")
-			.setDesc("Customize the HTML template used for font preview notes");
-
-		const isCustomTemplate =
-			this.plugin.settings.templateSelection === "custom";
+			.setName(MODAL_STRINGS.SETTINGS_FONT_PREVIEW_TEMPLATE)
+			.setDesc(
+				this.plugin.settings.templateSelection === "custom"
+					? MODAL_STRINGS.SETTINGS_FONT_PREVIEW_TEMPLATE_DESC
+					: MODAL_STRINGS.SETTINGS_CUSTOM_TEMPLATE_DESC
+			);
 
 		templateEditorSetting.addButton((button) =>
 			button
-				.setButtonText("Edit Template")
+				.setButtonText(MODAL_STRINGS.EDIT_TEMPLATE_BUTTON)
 				.setCta()
-				.setDisabled(!isCustomTemplate)
+				.setDisabled(
+					this.plugin.settings.templateSelection !== "custom"
+				)
 				.onClick(() => {
-					if (isCustomTemplate) {
+					if (this.plugin.settings.templateSelection === "custom") {
 						// Create a proper template editor that can save back to settings
 						const templateEditor = new TemplateEditorSettingsModal(
 							this.app,
@@ -1351,20 +1291,34 @@ class FontGallerySettingTab extends PluginSettingTab {
 						);
 						templateEditor.open();
 					} else {
-						// If not in custom template mode, show a notice
-						new Notice(
-							"Please select 'Custom Template' from the Template Style dropdown first."
-						);
+						// If not in custom template mode, switch to custom template
+						this.plugin.settings.templateSelection = "custom";
+
+						// If switching to custom for the first time, use the current template as a starting point
+						if (this.plugin.settings.fontTemplate === "") {
+							this.plugin.settings.fontTemplate = MODERN_TEMPLATE;
+						}
+
+						this.plugin.saveSettings().then(() => {
+							new Notice(
+								MODAL_STRINGS.TEMPLATE_STYLE_UPDATED + "custom"
+							);
+							// Refresh the settings display
+							this.display();
+
+							// Now that we're in custom template mode, open the editor
+							setTimeout(() => {
+								const templateEditor =
+									new TemplateEditorSettingsModal(
+										this.app,
+										this.plugin
+									);
+								templateEditor.open();
+							}, 100);
+						});
 					}
 				})
 		);
-
-		// Add a description about the template editing
-		if (!isCustomTemplate) {
-			templateEditorSetting.setDesc(
-				"Select 'Custom Template' from the Template Style dropdown to enable template editing."
-			);
-		}
 	}
 }
 
@@ -1383,12 +1337,16 @@ class TemplateEditorSettingsModal extends Modal {
 		this.plugin = plugin;
 
 		console.log(
-			"TemplateEditorSettingsModal - Current template selection:",
-			plugin.settings.templateSelection
+			formatString(
+				MODAL_STRINGS.DEBUG_SETTINGS_EDITOR_SELECTION,
+				plugin.settings.templateSelection
+			)
 		);
 		console.log(
-			"TemplateEditorSettingsModal - Current template content:",
-			plugin.settings.fontTemplate.substring(0, 50) + "..."
+			formatString(
+				MODAL_STRINGS.DEBUG_SETTINGS_EDITOR_CONTENT,
+				plugin.settings.fontTemplate.substring(0, 50) + "..."
+			)
 		);
 
 		// Always use the current template from settings
@@ -1409,8 +1367,10 @@ class TemplateEditorSettingsModal extends Modal {
 		}
 
 		console.log(
-			"TemplateEditorSettingsModal - Original template set to:",
-			this.originalTemplate.substring(0, 50) + "..."
+			formatString(
+				MODAL_STRINGS.DEBUG_SETTINGS_ORIGINAL_TEMPLATE,
+				this.originalTemplate.substring(0, 50) + "..."
+			)
 		);
 	}
 
@@ -1427,11 +1387,11 @@ class TemplateEditorSettingsModal extends Modal {
 			cls: "modal-header",
 		});
 		headerSection.createEl("h1", {
-			text: "Font Preview Template",
+			text: MODAL_STRINGS.TEMPLATE_EDITOR_TITLE,
 			cls: "modal-title",
 		});
 		headerSection.createEl("p", {
-			text: "This template will be used to generate font preview notes.",
+			text: MODAL_STRINGS.TEMPLATE_EDITOR_DESCRIPTION,
 			cls: "font-gallery-description",
 		});
 
@@ -1454,8 +1414,10 @@ class TemplateEditorSettingsModal extends Modal {
 		});
 
 		console.log(
-			"TemplateEditorSettingsModal - Setting editor value to:",
-			this.template.substring(0, 50) + "..."
+			formatString(
+				MODAL_STRINGS.DEBUG_SETTINGS_EDITOR_CONTENT,
+				this.template.substring(0, 50) + "..."
+			)
 		);
 
 		// Set the value after creating the element to ensure it's properly loaded
@@ -1477,17 +1439,11 @@ class TemplateEditorSettingsModal extends Modal {
 		});
 
 		variablesInfo.createEl("h3", {
-			text: "Available Template Variables:",
+			text: MODAL_STRINGS.VARIABLES_TITLE,
 		});
 
 		const variablesList = variablesInfo.createEl("ul");
-		[
-			"{fontFamily} - The font's family name",
-			"{fontName} - Sanitized version of the font name (used for filenames)",
-			"{fullName} - The font's full name (falls back to family name if not available)",
-			"{style} - The font's style (falls back to 'Regular' if not available)",
-			"{postscriptName} - The font's PostScript name (if available)",
-		].forEach((text) => {
+		MODAL_STRINGS.VARIABLES.forEach((text) => {
 			variablesList.createEl("li", { text });
 		});
 
@@ -1500,7 +1456,7 @@ class TemplateEditorSettingsModal extends Modal {
 
 		// Add reset button
 		const resetButton = buttonContainer.createEl("button", {
-			text: "Reset to Default",
+			text: MODAL_STRINGS.RESET_BUTTON,
 			cls: "font-gallery-reset-button",
 		});
 
@@ -1510,26 +1466,24 @@ class TemplateEditorSettingsModal extends Modal {
 
 		resetButton.addEventListener("click", () => {
 			// Confirm before resetting
-			if (
-				confirm(
-					"Are you sure you want to reset to the default template?"
-				)
-			) {
+			if (confirm(MODAL_STRINGS.RESET_CONFIRM)) {
 				templateEditor.value = this.originalTemplate;
 				this.template = this.originalTemplate;
 			}
 		});
 
 		const saveButton = buttonContainer.createEl("button", {
-			text: "Save Template",
+			text: MODAL_STRINGS.SAVE_TEMPLATE_BUTTON,
 			cls: "font-gallery-create-button",
 		});
 
 		saveButton.addEventListener("click", () => {
-			console.log("TemplateEditorSettingsModal - Save button clicked");
+			console.log(MODAL_STRINGS.DEBUG_SETTINGS_SAVE_CLICKED);
 			console.log(
-				"TemplateEditorSettingsModal - New template value:",
-				templateEditor.value.substring(0, 50) + "..."
+				formatString(
+					MODAL_STRINGS.DEBUG_SETTINGS_NEW_VALUE,
+					templateEditor.value.substring(0, 50) + "..."
+				)
 			);
 
 			this.template = templateEditor.value;
@@ -1541,18 +1495,20 @@ class TemplateEditorSettingsModal extends Modal {
 			this.plugin
 				.saveSettings()
 				.then(() => {
-					console.log(
-						"TemplateEditorSettingsModal - Settings saved successfully"
-					);
-					new Notice("Template saved successfully");
+					console.log(MODAL_STRINGS.DEBUG_SETTINGS_SAVING);
+					new Notice(MODAL_STRINGS.TEMPLATE_SAVED);
 					this.close();
 				})
 				.catch((error) => {
 					console.error(
-						"TemplateEditorSettingsModal - Error saving settings:",
-						error
+						formatString(
+							MODAL_STRINGS.DEBUG_SETTINGS_SAVE_ERROR,
+							error
+						)
 					);
-					new Notice("Error saving template: " + error.message);
+					new Notice(
+						MODAL_STRINGS.TEMPLATE_SAVE_ERROR + error.message
+					);
 				});
 		});
 	}
@@ -1561,61 +1517,20 @@ class TemplateEditorSettingsModal extends Modal {
 	getTemplateStyleName(templateSelection: string): string {
 		switch (templateSelection) {
 			case "classic":
-				return "Classic Layout";
+				return MODAL_STRINGS.CLASSIC_LAYOUT;
 			case "modern":
-				return "Modern Layout";
+				return MODAL_STRINGS.MODERN_LAYOUT;
 			case "custom":
-				return "Custom Template";
+				return MODAL_STRINGS.CUSTOM_TEMPLATE;
 			default:
-				return "Custom Template";
+				return MODAL_STRINGS.CUSTOM_TEMPLATE;
 		}
 	}
 
 	addModalStyles() {
 		const { contentEl } = this;
 		const styleEl = contentEl.createEl("style");
-		styleEl.textContent = `
-			.font-gallery-modal {
-				padding: 20px;
-			}
-			
-			.modal-header {
-				margin-bottom: 24px;
-				text-align: center;
-			}
-			
-			.modal-title {
-				margin-bottom: 8px;
-				font-size: 24px;
-			}
-			
-			.font-gallery-description {
-				opacity: 0.8;
-				margin-bottom: 16px;
-			}
-			
-			.font-gallery-button-container {
-				display: flex;
-				justify-content: center;
-				margin-top: 20px;
-			}
-			
-			.font-gallery-create-button {
-				padding: 8px 16px;
-				font-size: 16px;
-				font-weight: 500;
-			}
-			
-			.font-gallery-template-editor {
-				width: 100%;
-				min-height: 300px;
-				font-family: monospace;
-				padding: 10px;
-				border-radius: 4px;
-				background-color: var(--background-primary);
-				border: 1px solid var(--background-modifier-border);
-			}
-		`;
+		styleEl.textContent = TEMPLATE_EDITOR_STYLES;
 	}
 }
 

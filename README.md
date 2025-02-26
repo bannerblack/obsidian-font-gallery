@@ -124,3 +124,28 @@ To edit the custom template:
 4. Click "Save Template" to apply changes
 
 You can also reset to the default template at any time by clicking "Reset to Default" in the template editor.
+
+## Recent Updates
+
+### Enhanced Typography Templates
+The Font Gallery plugin now includes a **Template Selector** feature that allows you to choose between different template styles:
+
+- **Classic Layout**: A simple, clean layout for font previews
+- **Modern Layout**: A more comprehensive layout with additional typography samples
+- **Custom Template**: Create your own template with full customization options
+
+You can select your preferred template style from both the Font Gallery modal and the plugin settings.
+
+### Improved Code Organization
+The plugin's codebase has been reorganized for better maintainability:
+
+- **String Literals Separated**: All text strings have been moved to a dedicated `strings.ts` file, making it easier to edit and maintain text content
+- **Template Constants**: Font preview templates are stored as constants, allowing for easy modification
+- **Improved Logging**: Debug logging has been enhanced to help troubleshoot any issues
+
+### Customization Options
+The plugin now offers more customization options:
+
+- **Template Editor**: Edit your custom template with a built-in editor
+- **Template Variables**: Use variables like `{fontFamily}`, `{fontName}`, etc. to customize your template
+- **Reset to Default**: Easily reset to the default template if needed
