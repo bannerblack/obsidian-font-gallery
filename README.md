@@ -1,11 +1,12 @@
-# Font Gallery for Obsidian (Automatically Generated Until Major Release)
-
-![Screenshot of single note view](https://github.com/user-attachments/assets/b5f2efb8-0dd5-4a5e-b7e3-a18c9689152b)
-![Screenshot of Font Gallery](https://github.com/user-attachments/assets/745a53ec-f63f-434f-8be8-003324cbe427)
+# Font Gallery for Obsidian 
+(Automatically Generated Until Major Release)
 
 ## Overview
 
 Font Gallery is anObsidian plugin that helps you visualize, organize, and explore all the fonts installed on your system. It creates formatted preview notes for each font, allowing you to see how your text would look in different typefaces without installing additional software.
+
+![Screenshot of single note view](https://github.com/user-attachments/assets/b5f2efb8-0dd5-4a5e-b7e3-a18c9689152b)
+![Screenshot of Font Gallery](https://github.com/user-attachments/assets/745a53ec-f63f-434f-8be8-003324cbe427)
 
 ---
 
